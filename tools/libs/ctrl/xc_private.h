@@ -277,6 +277,8 @@ static inline int do_domctl_maybe_retry_efault(xc_interface *xch,
     }
 
     do {
+        /* Migration log stub */ 
+        printf("Attempting Hypercall...\n");
         ret = xencall1(xch->xcall, __HYPERVISOR_domctl,
                        HYPERCALL_BUFFER_AS_ARG(domctl));
     } while ( ret < 0 && errno == EFAULT && retry_cnt++ < retries );

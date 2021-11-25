@@ -689,6 +689,9 @@ int create_domain(struct domain_create *dom_info)
         union { uint32_t u32; char b[4]; } u32buf;
         uint32_t badflags;
 
+        /* Migration log stub */
+        time_t now = time(NULL);
+        printf("%s : Copying File source file/memory data to memory\n", asctime(localtime(&now)));
         if (migrate_fd >= 0) {
             restore_source = "<incoming migration stream>";
             restore_fd = migrate_fd;
@@ -804,9 +807,13 @@ int create_domain(struct domain_create *dom_info)
         fprintf(stderr, "Parsing config from %s\n", config_source);
 
     if (config_in_json) {
+        /* Migration log stub */
+        printf("Loading configuration from json\n");
         libxl_domain_config_from_json(ctx, &d_config,
                                       (const char *)config_data);
     } else {
+        /* Migration log stub */
+        printf("Parsing configuration data\n");
         parse_config_data(config_source, config_data, config_len, &d_config);
     }
 

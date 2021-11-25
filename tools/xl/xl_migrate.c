@@ -44,6 +44,11 @@ static pid_t create_migration_child(const char *rune, int *send_fd,
     MUST( libxl_pipe(ctx, sendpipe) );
     MUST( libxl_pipe(ctx, recvpipe) );
 
+
+    /* Migration Log Stub */
+    time_t my_ts = time(NULL);
+    printf("%s : Creating fork process to handle migration task.\n", asctime(localtime(&my_ts)));
+
     child = xl_fork(child_migration, "migration transport process");
 
     if (!child) {
@@ -55,6 +60,10 @@ static pid_t create_migration_child(const char *rune, int *send_fd,
         perror("failed to exec sh");
         exit(EXIT_FAILURE);
     }
+
+    /* Migration Log Stub */
+    my_ts = time(NULL);
+    printf("%s : Initializing transport pipes\n", asctime(localtime(&my_ts)));
 
     close(sendpipe[0]);
     close(recvpipe[1]);
@@ -162,6 +171,10 @@ static void migrate_do_preamble(int send_fd, int recv_fd, pid_t child,
         exit(EXIT_FAILURE);
     }
 
+    /* Migration Log Stub */
+    time_t my_ts = time(NULL);
+    printf("%s : Retrieving message from destination host...\n", asctime(localtime(&my_ts)));
+    
     rc = migrate_read_fixedmessage(recv_fd, migrate_receiver_banner,
                                    sizeof(migrate_receiver_banner)-1,
                                    "banner", rune);
@@ -171,6 +184,9 @@ static void migrate_do_preamble(int send_fd, int recv_fd, pid_t child,
         exit(EXIT_FAILURE);
     }
 
+    /* Migration Log Stub */
+    time_t my_ts = time(NULL);
+    printf("%s : Writing new domain configuration...\n", asctime(localtime(&my_ts)));
     save_domain_core_writeconfig(send_fd, "migration stream",
                                  config_data, config_len);
 
@@ -188,6 +204,10 @@ static void migrate_domain(uint32_t domid, int preserve_domid,
     uint8_t *config_data;
     int config_len, flags = LIBXL_SUSPEND_LIVE;
 
+
+    /* Migration Log Stub */
+    time_t my_ts = time(NULL);
+    printf("%s : Retrieving domain configuation information\n", asctime(localtime(&my_ts)));
     save_domain_core_begin(domid, preserve_domid, override_config_file,
                            &config_data, &config_len);
 
@@ -202,10 +222,17 @@ static void migrate_domain(uint32_t domid, int preserve_domid,
     migrate_do_preamble(send_fd, recv_fd, child, config_data, config_len,
                         rune);
 
+    /* Migration Log Stub */
+    time_t my_ts = time(NULL);
+    printf("%s : Updating stream flags\n", asctime(localtime(&my_ts)));
     xtl_stdiostream_adjust_flags(logger, XTL_STDIOSTREAM_HIDE_PROGRESS, 0);
 
     if (debug)
         flags |= LIBXL_SUSPEND_DEBUG;
+    
+    /* Migration Log Stub */
+    time_t my_ts = time(NULL);
+    printf("%s : Suspending domain...\n", asctime(localtime(&my_ts)));
     rc = libxl_domain_suspend(ctx, domid, send_fd, flags, NULL);
     if (rc) {
         fprintf(stderr, "migration sender: libxl_domain_suspend failed"
@@ -220,11 +247,17 @@ static void migrate_domain(uint32_t domid, int preserve_domid,
     // Should only be printed when debugging as it's a bit messy with
     // progress indication.
 
+    /* Migration Log Stub */
+    time_t my_ts = time(NULL);
+    printf("%s : Retrieving message from destination host\n", asctime(localtime(&my_ts)));
     rc = migrate_read_fixedmessage(recv_fd, migrate_receiver_ready,
                                    sizeof(migrate_receiver_ready),
                                    "ready message", rune);
     if (rc) goto failed_resume;
 
+    /* Migration Log Stub */
+    time_t my_ts = time(NULL);
+    printf("%s : Updating stream flags", asctime(localtime(&my_ts)));
     xtl_stdiostream_adjust_flags(logger, 0, XTL_STDIOSTREAM_HIDE_PROGRESS);
 
     /* right, at this point we are about give the destination
@@ -233,6 +266,9 @@ static void migrate_domain(uint32_t domid, int preserve_domid,
 
     fprintf(stderr, "migration sender: Target has acknowledged transfer.\n");
 
+    /* Migration Log Stub */
+    time_t my_ts = time(NULL);
+    printf("%s : Renaming domain\n", asctime(localtime(&my_ts)));
     if (common_domname) {
         xasprintf(&away_domname, "%s--migratedaway", common_domname);
         rc = libxl_domain_rename(ctx, domid, common_domname, away_domname);
@@ -246,6 +282,9 @@ static void migrate_domain(uint32_t domid, int preserve_domid,
 
     fprintf(stderr, "migration sender: Giving target permission to start.\n");
 
+    /* Migration Log Stub */
+    time_t my_ts = time(NULL);
+    printf("%s : Relaunching domain on receiving host...\n", asctime(localtime(&my_ts)));
     rc = libxl_write_exactly(ctx, send_fd,
                              migrate_permission_to_go,
                              sizeof(migrate_permission_to_go),
@@ -334,6 +373,10 @@ static void migrate_receive(int debug, int daemonize, int monitor,
 
     fprintf(stderr, "migration target: Ready to receive domain.\n");
 
+
+    /* Migration Log Stub */
+    time_t my_ts = time(NULL);
+    printf("%s : Notifying source that target is ready to receive\n", asctime(localtime(&my_ts)));
     CHK_ERRNOVAL(libxl_write_exactly(
                      ctx, send_fd, migrate_receiver_banner,
                      sizeof(migrate_receiver_banner)-1,
@@ -573,6 +616,10 @@ int main_migrate(int argc, char **argv)
         break;
     }
 
+    /* Migration Log Stub */
+    time_t my_ts = time(NULL);
+    printf("%s : New migration task received\n", asctime(localtime(&my_ts)));
+
     domid = find_domain(argv[optind]);
     host = argv[optind + 1];
 
@@ -602,7 +649,16 @@ int main_migrate(int argc, char **argv)
                   pause_after_migration ? " -p" : "");
     }
 
+    /* Migration Log Stub */
+    time_t my_ts = time(NULL);
+    printf("%s : Migration reception initiated on receiving guest\n", asctime(localtime(&my_ts)));
+
     migrate_domain(domid, preserve_domid, rune, debug, config_filename);
+
+
+    /* Migration Log Stub */
+    time_t my_ts = time(NULL);
+    printf("%s : New migration task completed\n", asctime(localtime(&my_ts)));
     return EXIT_SUCCESS;
 }
 

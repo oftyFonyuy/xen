@@ -74,6 +74,8 @@ static int update_domain_cpu_policy(struct domain *d,
     x86_cpuid_policy_clear_out_of_range_leaves(new.cpuid);
 
     /* Audit the combined dataset. */
+        /* Migration log stub */ 
+        printf("Verify that that domain cpu policy is compatible with that of host\n");
     ret = x86_cpu_policies_are_compatible(sys, &new, &err);
     if ( ret )
         goto out;
@@ -209,6 +211,8 @@ long arch_do_domctl(
     struct xen_domctl *domctl, struct domain *d,
     XEN_GUEST_HANDLE_PARAM(xen_domctl_t) u_domctl)
 {
+    /* Migration log stub */ 
+    printf("Stepped into arch_do_domctl\n");
     struct vcpu *curr = current;
     struct domain *currd = curr->domain;
     long ret = 0;
@@ -1365,6 +1369,8 @@ long arch_do_domctl(
             ret = -EEXIST; /* No changing once the domain is running. */
         else
         {
+            /* Migration log stub */ 
+            printf("Updating domain cpu policy\n");
             ret = update_domain_cpu_policy(d, &domctl->u.cpu_policy);
             if ( ret ) /* Copy domctl->u.cpu_policy.err_* to guest. */
                 copyback = true;

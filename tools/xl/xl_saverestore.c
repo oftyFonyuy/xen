@@ -109,6 +109,9 @@ void save_domain_core_writeconfig(int fd, const char *source,
 
     /* that's the optional data */
 
+    /* Sending header information to receiving host 
+    *  First the entire header then optional data
+    */
     CHK_ERRNOVAL(libxl_write_exactly(
                      ctx, fd, &hdr, sizeof(hdr), source, "header"));
     CHK_ERRNOVAL(libxl_write_exactly(
